@@ -34,13 +34,9 @@ int             mhz_co2_init     = 410;  // magic value reported during init
 
 // Configuration via WiFiSettings
 unsigned long   mqtt_interval;
-bool            ota_enabled;
-int             co2_warning;
-int             co2_critical;
-int             co2_blink;
-String          mqtt_topic;
+String          mqtt_Pubtopic;
+String          mqtt_Subtopic;
 String          mqtt_template;
-bool            add_units;
 bool            wifi_enabled;
 bool            mqtt_enabled;
 int             max_failures;
@@ -55,20 +51,10 @@ void retain(const String& topic, const String& message) {
 
 void display_ppm(int ppm) {
     int fg, bg;
-    if (ppm >= co2_critical) {
-        fg = TFT_WHITE;
-        bg = TFT_RED;
-    } else if (ppm >= co2_warning) {
-        fg = TFT_BLACK;
-        bg = TFT_YELLOW;
-    } else {
-        fg = TFT_GREEN;
-        bg = TFT_BLACK;
-    }
-
-    if (ppm >= co2_blink && millis() % 2000 < 1000) {
-        std::swap(fg, bg);
-    }
+   
+    fg = TFT_WHITE;
+    bg = TFT_RED;
+       
     display_big(String(ppm), fg, bg);
 }
 
@@ -208,20 +194,27 @@ void setup() {
     wifi_enabled  = WiFiSettings.checkbox("operame_wifi", false, T.config_wifi);
     // ota_enabled   = WiFiSettings.checkbox("operame_ota", false, T.config_ota) && wifi_enabled;
 
-    WiFiSettings.heading("CO2-niveaus");
-    co2_warning   = WiFiSettings.integer("operame_co2_warning", 400, 5000, 700, T.config_co2_warning);
-    co2_critical  = WiFiSettings.integer("operame_co2_critical",400, 5000, 800, T.config_co2_critical);
-    co2_blink     = WiFiSettings.integer("operame_co2_blink",   800, 5000, 800, T.config_co2_blink);
-
-    WiFiSettings.heading("MQTT");
-    mqtt_enabled  = WiFiSettings.checkbox("operame_mqtt", false, T.config_mqtt) && wifi_enabled;
-    String server = WiFiSettings.string("mqtt_server", 64, "", T.config_mqtt_server);
+     WiFiSettings.heading("MQTT");
+    mqtt_enabled  = WiFiSettings.checkbox("HiveMQ_mqtt", false, T.config_mqtt) && wifi_enabled;
+    String server = WiFiSettings.string("mqtt_server", 64, "broker.hivemq.com", T.config_mqtt_server);
     int port      = WiFiSettings.integer("mqtt_port", 0, 65535, 1883, T.config_mqtt_port);
-    max_failures  = WiFiSettings.integer("operame_max_failures", 0, 1000, 10, T.config_max_failures);
-    mqtt_topic  = WiFiSettings.string("operame_mqtt_topic", WiFiSettings.hostname, T.config_mqtt_topic);
-    mqtt_interval = 1000UL * WiFiSettings.integer("operame_mqtt_interval", 10, 3600, 10, T.config_mqtt_interval);
-    mqtt_template = WiFiSettings.string("operame_mqtt_template", "{} PPM", T.config_mqtt_template);
+    max_failures  = WiFiSettings.integer("HiveMQ_max_failures", 0, 1000, 10, T.config_max_failures);
+    mqtt_Pubtopic = WiFiSettings.string("HiveMQ_mqtt_topic", WiFiSettings.hostname, T.config_mqtt_topic);
+    mqtt_Subtopic  = WiFiSettings.string("HiveMQ_Submqtt_topic", "HiveMQ-e8e288-ks", T.config_Submqtt_topic); 
+    mqtt_interval = 1000UL * WiFiSettings.integer("HiveMQ_mqtt_interval", 10, 3600, 10, T.config_mqtt_interval);
+    mqtt_template = WiFiSettings.string("HiveMQ_mqtt_template", "Value : {}", T.config_mqtt_template);
     WiFiSettings.info(T.config_template_info);
+
+
+    Serial.println("*** Setting overview ***");
+    Serial.print("mqtt_Pubtopic: ");
+    Serial.println(mqtt_Pubtopic);
+    Serial.print("mqtt_Subtopic: ");
+    Serial.println(mqtt_Subtopic);
+    Serial.print("PlatformIO Unix compile time: ");
+    Serial.println(COMPILE_UNIX_TIME);
+    Serial.println("*** ****** *******  ***");
+    
 
     WiFiSettings.onConnect = [] {
         display_big(T.connecting, TFT_BLUE);
@@ -235,7 +228,7 @@ void setup() {
     static int portal_phase = 0;
     static unsigned long portal_start;
     WiFiSettings.onPortal = [] {
-        if (ota_enabled) setup_ota();
+        // if (ota_enabled) setup_ota();
         portal_start = millis();
     };
     WiFiSettings.onPortalView = [] {
@@ -254,7 +247,7 @@ void setup() {
             panic(T.error_timeout);
         }
 
-        if (ota_enabled) ArduinoOTA.handle();
+        // if (ota_enabled) ArduinoOTA.handle();
         if (button(pin_portalbutton)) ESP.restart();
     };
 
@@ -264,8 +257,12 @@ void setup() {
     static WiFiClient wificlient;
     if (mqtt_enabled) mqtt.begin(server.c_str(), port, wificlient);
     
-    ota_enabled = false;
-    if (ota_enabled) setup_ota();
+    Serial.println("Ready .... ");
+    display_big("Ready !", TFT_RED);
+    delay(1000);
+    display_config(server,mqtt_Pubtopic,mqtt_Subtopic);
+    delay(1000);
+    
 }
 
 
@@ -282,6 +279,8 @@ void loop() {
         Serial.println(co2);
     }
 
+/* update Oled with CO2 value :
+
     every(50) {
         if (co2 < 0) {
             display_big(T.error_sensor, TFT_RED);
@@ -293,6 +292,7 @@ void loop() {
             display_ppm(co2 > 9999 ? 9999 : co2);
         }
     }
+*/
 
     if (mqtt_enabled) {
         mqtt.loop();
@@ -301,7 +301,7 @@ void loop() {
             connect_mqtt();
             String message = mqtt_template;
             message.replace("{}", String(co2));
-            retain(mqtt_topic, message);
+            retain(mqtt_Pubtopic, message);
         }
     }
 
