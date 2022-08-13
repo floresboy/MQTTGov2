@@ -42,8 +42,8 @@ bool            mqtt_enabled;
 int             max_failures;
 
 void retain(const String& topic, const String& message) {
-    Serial.println("MQTTGo v2 Pub-ing ret. message now...");
-    Serial.printf("topic: %s payload: %s\n", topic.c_str(), message.c_str());
+    Serial.printf("MQTTGo v2 Pub-ing ret. message now... topic: %s payload: %s\n", topic.c_str(), message.c_str());
+    display_topic(topic, message);
     mqtt.publish(topic, message, true, 0);
 }
 
@@ -290,10 +290,13 @@ void setup() {
 void loop() {
     static int co2;
 
-    every(5000) {
-        co2 = get_co2();
-        Serial.print("MQTTGo v2 Get Co2 value : ");
-        Serial.println(co2);
+    every(20000) {
+        
+        mqtt.loop();
+        connect_mqtt();
+        retain(mqtt_Pubtopic, "Still alived");
+        Serial.println("MQTTGo v2 MQTT Still alive messages send");
+        
     }
 
 /* update Oled with CO2 value :
@@ -311,19 +314,20 @@ void loop() {
     }
 */
 
-    if (mqtt_enabled) {
+    if (mqtt_enabled && button(pin_demobutton)) {
+        Serial.println("MQTTGo v2 MQTT enabled and Button press detected, pubbing msg now..");
         mqtt.loop();
-        every(mqtt_interval) {
-            if (co2 <= 0) break;
-            connect_mqtt();
-            String message = mqtt_template;
-            message.replace("{}", String(co2));
-            retain(mqtt_Pubtopic, message);
-        }
+        connect_mqtt();
+        display_big("button pressed");
+        delay(1000);
+        retain(mqtt_Pubtopic, "Button press detected");
+        delay(2000);
+        
+        
     }
 
     // if (ota_enabled) ArduinoOTA.handle();
     check_portalbutton();
-    check_PubButton();
+    // check_PubButton();
 }
 
