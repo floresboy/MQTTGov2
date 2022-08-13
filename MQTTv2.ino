@@ -45,6 +45,7 @@ bool            mqtt_enabled;
 int             max_failures;
 
 void retain(const String& topic, const String& message) {
+    Serial.println("MQTTGo v2 Pub-ing ret. message now...");
     Serial.printf("%s %s\n", topic.c_str(), message.c_str());
     mqtt.publish(topic, message, true, 0);
 }
@@ -115,24 +116,7 @@ void display_ppm(int ppm) {
     display_big(String(ppm), fg, bg);
 }
 
-void calibrate() {
-    auto lines = T.calibration;
-    for (int count = 60; count >= 0; count--) {
-        lines.back() = String(count);
-        display_lines(lines, TFT_RED);
-        unsigned long start = millis();
-        while (millis() - start < 1000) {
-            if (button(pin_demobutton) || button(pin_portalbutton)) return;
-        }
-    }
 
-    lines = T.calibrating;
-    if (driver == AQC) for (auto& line : lines) line.replace("400", "425");
-    display_lines(lines, TFT_MAGENTA);
-
-    set_zero();    // actually instantaneous
-    delay(15000);  // give time to read long message
-}
 
 void ppm_demo() {
     display_big("demo!");
@@ -147,19 +131,6 @@ void ppm_demo() {
             delay(500);
             return;
         }
-
-        // Hold portal button from 700 to 800 for manual calibration
-        if (p >= 700 && p < 800 && !digitalRead(pin_portalbutton)) {
-            buttoncounter++;
-        }
-        if (p == 800 && buttoncounter >= 85) {
-            while (!digitalRead(pin_portalbutton)) delay(100);
-            calibrate();
-            display_logo();
-            delay(500);
-            return;
-        }
-        delay(30);
     }
     display_logo();
     delay(5000);
@@ -225,109 +196,26 @@ void flush(Stream& s, int limit = 20) {
     while(s.available() && --limit) s.read();  // flush input
 }
 
-int aqc_get_co2() {
-    static bool initialized = false;
 
-    const uint8_t command[9] = { 0xff, 0x01, 0xc5, 0, 0, 0, 0, 0, 0x3a };
-    uint8_t response[9];
-    int co2 = -1;
-
-    for (int attempt = 0; attempt < 3; attempt++) {
-        flush(hwserial1);
-        hwserial1.write(command, sizeof(command));
-        delay(50);
-
-        size_t c = hwserial1.readBytes(response, sizeof(response));
-        if (c != sizeof(response) || response[0] != 0xff || response[1] != 0x86) {
-            continue;
-        }
-        uint8_t checksum = 255;
-        for (int i = 0; i < sizeof(response) - 1; i++) {
-            checksum -= response[i];
-        }
-        if (response[8] == checksum) {
-            co2 = response[2] * 256 + response[3];
-            break;
-        }
-        delay(50);
-    }
-
-    if (co2 < 0) {
-        initialized = false;
-        return co2;
-    }
-
-    if (!initialized && (co2 == 9999 || co2 == 400)) return 0;
-    initialized = true;
-    return co2;
-}
-
-void aqc_set_zero() {
-    const uint8_t command[9] = { 0xff, 0x01, 0x87, 0, 0, 0, 0, 0, 0x78 };
-    flush(hwserial1);
-    hwserial1.write(command, sizeof(command));
-}
-
-void mhz_setup() {
-    mhz.begin(hwserial1);
-    // mhz.setFilter(true, true);  Library filter doesn't handle 0436
-    mhz.autoCalibration(true);
-    char v[5] = {};
-    mhz.getVersion(v);
-    v[4] = '\0';
-    if (strcmp("0436", v) == 0) mhz_co2_init = 436;
-}
-
-int mhz_get_co2() {
-    int co2       = mhz.getCO2();
-    int unclamped = mhz.getCO2(false);
-
-    if (mhz.errorCode != RESULT_OK) {
-        delay(500);
-        mhz_setup();
-        return -1;
-    }
-
-    // reimplement filter from library, but also checking for 436 because our
-    // sensors (firmware 0436, coincidence?) return that instead of 410...
-    if (unclamped == mhz_co2_init && co2 - unclamped >= 10) return 0;
-
-    // No known sensors support >10k PPM (library filter tests for >32767)
-    if (co2 > 10000 || unclamped > 10000) return 0;
-
-    return co2;
-}
-
-void mhz_set_zero() {
-    mhz.calibrate();
-}
 
 int get_co2() {
     // <0 means read error, 0 means still initializing, >0 is PPM value
 
-    if (driver == AQC) return aqc_get_co2();
-    if (driver == MHZ) return mhz_get_co2();
+    //if (driver == AQC) return aqc_get_co2();
+    // if (driver == MHZ) return mhz_get_co2();
+    return(2304);
 
     // Should be unreachable
     panic(T.error_driver);
     return -1;  // suppress warning
 }
 
-void set_zero() {
-    if (driver == AQC) { aqc_set_zero(); return; }
-    if (driver == MHZ) { mhz_set_zero(); return; }
 
-    // Should be unreachable
-    panic(T.error_driver);
-}
-
-
-
-// ******************* SetUp ************************************** SetUp ************************************** SetUp *******************
+// ******************* SetUp ************************************** SetUp ************************************* SetUp *******************
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("Operame start");
+    Serial.println("MQTTGo v2 start");
 
     digitalWrite(pin_backlight, HIGH);
     display.init();
@@ -347,33 +235,18 @@ void setup() {
 
     pinMode(pin_portalbutton,   INPUT_PULLUP);
     pinMode(pin_demobutton,     INPUT_PULLUP);
-    pinMode(pin_pcb_ok,         INPUT_PULLUP);
+    // pinMode(pin_pcb_ok,         INPUT_PULLUP);
     pinMode(pin_backlight,      OUTPUT);
 
-    WiFiSettings.hostname = "operame-";
+    WiFiSettings.hostname = "HiveMq-";
     WiFiSettings.language = LANGUAGE;
     WiFiSettings.begin();
     OperameLanguage::select(T, WiFiSettings.language);
 
-    while (digitalRead(pin_pcb_ok)) {
-        display_big(T.error_module, TFT_RED);
-        delay(1000);
-    }
-
+    Serial.println("MQTTGo v2 Display logo");
     display_logo();
     delay(2000);
 
-    hwserial1.begin(9600, SERIAL_8N1, pin_sensor_rx, pin_sensor_tx);
-
-    if (aqc_get_co2() >= 0) {
-        driver = AQC;
-        hwserial1.setTimeout(100);
-        Serial.println("Using AQC driver.");
-    } else {
-        driver = MHZ;
-        mhz_setup();
-        Serial.println("Using MHZ driver.");
-    }
 
 
     for (auto& str : T.portal_instructions[0]) {
@@ -394,7 +267,7 @@ void setup() {
     int port      = WiFiSettings.integer("mqtt_port", 0, 65535, 1883, T.config_mqtt_port);
     max_failures  = WiFiSettings.integer("operame_max_failures", 0, 1000, 10, T.config_max_failures);
     mqtt_topic  = WiFiSettings.string("operame_mqtt_topic", WiFiSettings.hostname, T.config_mqtt_topic);
-    mqtt_interval = 1000UL * WiFiSettings.integer("operame_mqtt_interval", 10, 3600, 60, T.config_mqtt_interval);
+    mqtt_interval = 1000UL * WiFiSettings.integer("operame_mqtt_interval", 10, 3600, 10, T.config_mqtt_interval);
     mqtt_template = WiFiSettings.string("operame_mqtt_template", "{} PPM", T.config_mqtt_template);
     WiFiSettings.info(T.config_template_info);
 
@@ -435,9 +308,11 @@ void setup() {
 
     if (wifi_enabled) WiFiSettings.connect(false, 15);
 
+    mqtt_enabled = true;
     static WiFiClient wificlient;
     if (mqtt_enabled) mqtt.begin(server.c_str(), port, wificlient);
-
+    
+    ota_enabled = false;
     if (ota_enabled) setup_ota();
 }
 
@@ -451,6 +326,7 @@ void loop() {
 
     every(5000) {
         co2 = get_co2();
+        Serial.print("MQTTGo v2 Get Co2 value : ");
         Serial.println(co2);
     }
 
@@ -460,6 +336,7 @@ void loop() {
         } else if (co2 == 0) {
             display_big(T.wait);
         } else {
+            // Serial.println("MQTTGo v2 Update display now...");
             // some MH-Z19's go to 10000 but the display has space for 4 digits
             display_ppm(co2 > 9999 ? 9999 : co2);
         }
