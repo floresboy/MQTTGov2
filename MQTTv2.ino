@@ -4,7 +4,7 @@
 #include <MQTT.h>
 #include <SPIFFS.h>
 #include <WiFiSettings.h>
-#include <MHZ19.h>
+
 #include <ArduinoOTA.h>
 #include <SPI.h>
 #include <TFT_eSPI.h>
@@ -17,20 +17,15 @@
 #define LANGUAGE "nl"
 MQTTLanguage::Texts T;
 
-enum Driver { AQC, MHZ };
-Driver          driver;
+
 MQTTClient      mqtt;
 HardwareSerial  hwserial1(1);
 
-MHZ19           mhz;
+// MHZ19           mhz;
 
 const int       pin_portalbutton = 35;
 const int       pin_demobutton   = 0;
 const int       pin_backlight    = 4;
-const int       pin_sensor_rx    = 27;
-const int       pin_sensor_tx    = 26;
-const int       pin_pcb_ok       = 12;   // pulled to GND by PCB trace
-int             mhz_co2_init     = 410;  // magic value reported during init
 
 // Configuration via WiFiSettings
 unsigned long   mqtt_interval;
