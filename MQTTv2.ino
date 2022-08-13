@@ -75,14 +75,20 @@ void ppm_demo() {
         }
     }
     display_logo();
+    Serial.print("MQTTGo v2 restarting ESP in 5 sec cause PPM demo routine");
     delay(5000);
+    ESP.restart();
 }
+
 
 void panic(const String& message) {
     display_big(message, TFT_RED);
     delay(5000);
     ESP.restart();
 }
+
+
+// ***************** Button handlers ******************************** Button handlers ******************************** Button handlers ***************
 
 bool button(int pin) {
     if (digitalRead(pin)) return false;
@@ -93,18 +99,29 @@ bool button(int pin) {
     return millis() - start >= 50;
 }
 
+
 void check_portalbutton() {
     if (button(pin_portalbutton)) WiFiSettings.portal();
 }
 
-void check_demobutton() {
-    if (button(pin_demobutton)) ppm_demo();
+
+void check_PubButton() {
+    if (button(pin_demobutton)) {
+        ppm_demo();
+    }
 }
+
 
 void check_buttons() {
     check_portalbutton();
-    check_demobutton();
+    check_PubButton();
 }
+
+
+
+// ***************** OTA handlers ******************************** OTA handlers ******************************** OTA handlers ***************
+
+
 
 void setup_ota() {
     ArduinoOTA.setHostname(WiFiSettings.hostname.c_str());
@@ -306,5 +323,7 @@ void loop() {
     }
 
     // if (ota_enabled) ArduinoOTA.handle();
-    check_buttons();
+    check_portalbutton();
+    check_PubButton();
 }
+
