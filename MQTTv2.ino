@@ -160,9 +160,8 @@ void setup() {
         str.replace("{ssid}", WiFiSettings.hostname);
     }
 
-    wifi_enabled  = WiFiSettings.checkbox("operame_wifi", true, T.config_wifi);
-    // ota_enabled   = WiFiSettings.checkbox("operame_ota", false, T.config_ota) && wifi_enabled;
-
+    wifi_enabled  = WiFiSettings.checkbox("MQTTGo_wifi", true, T.config_wifi);
+    
     WiFiSettings.heading("MQTT");
     mqtt_enabled  = WiFiSettings.checkbox("HiveMQ_mqtt", true, T.config_mqtt) && wifi_enabled;
     String server = WiFiSettings.string("mqtt_server", 64, "broker.hivemq.com", T.config_mqtt_server);
@@ -259,7 +258,7 @@ void loop() {
 
     every(mqtt_interval) {
 
-        MQTTretain(mqtt_Pubtopic, WiFiSettings.hostname+ " is still alive ");
+        MQTTretain(mqtt_Pubtopic, WiFiSettings.hostname+ " is alive ");
         Serial.printf("MQTTGo v2 MQTT %s Still alive messages send\n",WiFiSettings.hostname );
     }
 
