@@ -11,14 +11,10 @@ struct Texts {
         *error_driver,
         *error_module,
         *error_timeout,
-        *error_sensor,
         *error_wifi,
         *error_format,
         *config_wifi,
         // *config_ota,
-        *config_co2_warning,
-        *config_co2_critical,
-        *config_co2_blink,
         *config_mqtt,
         *config_mqtt_server,
         *config_mqtt_port,
@@ -60,7 +56,6 @@ bool select(Texts& T, String language) {
         T.error_driver = "driver error";
         T.error_module = "module turned around!";
         T.error_timeout = "Time's up";
-        T.error_sensor = "sensor error";
         T.error_wifi = "WiFi failed!";
         T.error_format = "Formatting failed";
         T.wait = "wait...";
@@ -130,7 +125,6 @@ bool select(Texts& T, String language) {
         T.error_driver = "driverfout";
         T.error_module = "module verkeerd om!";
         T.error_timeout = "Tijd verstreken";
-        T.error_sensor = "sensorfout";
         T.error_wifi = "WiFi mislukt!";
         T.error_format = "Formatteren mislukt";
         T.wait = "wacht...";

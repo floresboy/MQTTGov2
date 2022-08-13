@@ -14,12 +14,10 @@
 
 #include <display-cmd.h>
 
-#define LANGUAGE "nl"
+#define LANGUAGE "en"
 MQTTLanguage::Texts T;
 
-
 MQTTClient      mqtt;
-HardwareSerial  hwserial1(1);
 
 // MHZ19           mhz;
 
@@ -109,24 +107,10 @@ void connect_mqtt() {
 }
 
 void MQTT_messageReceived(String &topic, String &payload) {
-// Handler for incomming (subscribed messages)
+// callback function for incomming (subscribed messages)
   Serial.println("incoming on topic: " + topic + " payload: " + payload);
   display_Incoming_topic(topic, payload);
-  
-  /*
-  for (auto& str : T.DispSubMsg) {
-        str.replace("{topic}", topic);
-        str.replace("{payload}", payload);
-    }
-  display_lines(T.DispSubMsg, TFT_WHITE, TFT_BLUE);
-  */
-}
-
-
-
-
-
-
+ }
 
 
 // ***********************************************************************************************
@@ -136,20 +120,6 @@ void flush(Stream& s, int limit = 20) {
 
     s.flush();  // flush output
     while(s.available() && --limit) s.read();  // flush input
-}
-
-
-
-int get_co2() {
-    // <0 means read error, 0 means still initializing, >0 is PPM value
-
-    //if (driver == AQC) return aqc_get_co2();
-    // if (driver == MHZ) return mhz_get_co2();
-    return(2304);
-
-    // Should be unreachable
-    panic(T.error_driver);
-    return -1;  // suppress warning
 }
 
 
@@ -194,7 +164,7 @@ void setup() {
     wifi_enabled  = WiFiSettings.checkbox("operame_wifi", false, T.config_wifi);
     // ota_enabled   = WiFiSettings.checkbox("operame_ota", false, T.config_ota) && wifi_enabled;
 
-     WiFiSettings.heading("MQTT");
+    WiFiSettings.heading("MQTT");
     mqtt_enabled  = WiFiSettings.checkbox("HiveMQ_mqtt", false, T.config_mqtt) && wifi_enabled;
     String server = WiFiSettings.string("mqtt_server", 64, "broker.hivemq.com", T.config_mqtt_server);
     int port      = WiFiSettings.integer("mqtt_port", 0, 65535, 1883, T.config_mqtt_port);
@@ -294,9 +264,9 @@ void loop() {
 
     if (mqtt_enabled && button(pin_demobutton)) {
         Serial.println("MQTTGo v2 MQTT enabled and Button press detected, pubbing msg now..");
-        display_big("Button pressed"); // Show keypress on Oled
+        display_big("Btn press"); // Show keypress on Oled
         delay(1000);
-        MQTTretain(mqtt_Pubtopic, "Button press detected");  // Pub the MQTT message with retain flag 
+        MQTTretain(mqtt_Pubtopic, "!!Button press!!");  // Pub the MQTT message with retain flag 
         delay(2000);
     }
 
