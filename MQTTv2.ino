@@ -8,9 +8,11 @@
 #include <ArduinoOTA.h>
 #include <SPI.h>
 #include <TFT_eSPI.h>
-#include <logo.h>
+
 #include <list>
 #include <operame_strings.h>
+
+#include <display-cmd.h>
 
 #define LANGUAGE "nl"
 OperameLanguage::Texts T;
@@ -19,8 +21,7 @@ enum Driver { AQC, MHZ };
 Driver          driver;
 MQTTClient      mqtt;
 HardwareSerial  hwserial1(1);
-TFT_eSPI        display;
-TFT_eSprite     sprite(&display);
+
 MHZ19           mhz;
 
 const int       pin_portalbutton = 35;
@@ -50,52 +51,7 @@ void retain(const String& topic, const String& message) {
     mqtt.publish(topic, message, true, 0);
 }
 
-void clear_sprite(int bg = TFT_BLACK) {
-    sprite.fillSprite(bg);
-    if (WiFi.status() == WL_CONNECTED) {
-        sprite.drawRect(0, 0, display.width(), display.height(), TFT_BLUE);
-    }
-}
 
-void display_big(const String& text, int fg = TFT_WHITE, int bg = TFT_BLACK) {
-    clear_sprite(bg);
-    sprite.setTextSize(1);
-    bool nondigits = false;
-    for (int i = 0; i < text.length(); i++) {
-        char c = text.charAt(i);
-        if (c < '0' || c > '9') nondigits = true;
-    }
-    sprite.setTextFont(nondigits ? 4 : 8);
-    sprite.setTextSize(nondigits && text.length() < 10 ? 2 : 1);
-    sprite.setTextDatum(MC_DATUM);
-    sprite.setTextColor(fg, bg);
-    sprite.drawString(text, display.width()/2, display.height()/2);
-
-    sprite.pushSprite(0, 0);
-}
-
-void display_lines(const std::list<String>& lines, int fg = TFT_WHITE, int bg = TFT_BLACK) {
-    clear_sprite(bg);
-    sprite.setTextSize(1);
-    sprite.setTextFont(4);
-    sprite.setTextDatum(MC_DATUM);
-    sprite.setTextColor(fg, bg);
-
-    const int line_height = 32;
-    int y = display.height()/2 - (lines.size()-1) * line_height/2;
-    for (auto line : lines) {
-        sprite.drawString(line, display.width()/2, y);
-        y += line_height;
-    }
-    sprite.pushSprite(0, 0);
-}
-
-void display_logo() {
-    clear_sprite();
-    sprite.setSwapBytes(true);
-    sprite.pushImage(12, 30, 215, 76, OPERAME_LOGO);
-    sprite.pushSprite(0, 0);
-}
 
 void display_ppm(int ppm) {
     int fg, bg;
@@ -217,11 +173,7 @@ void setup() {
     Serial.begin(115200);
     Serial.println("MQTTGo v2 start");
 
-    digitalWrite(pin_backlight, HIGH);
-    display.init();
-    display.fillScreen(TFT_BLACK);
-    display.setRotation(1);
-    sprite.createSprite(display.width(), display.height());
+    display_init();
 
     OperameLanguage::select(T, LANGUAGE);
 
