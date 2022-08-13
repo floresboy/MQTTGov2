@@ -49,38 +49,6 @@ void retain(const String& topic, const String& message) {
 
 
 
-void display_ppm(int ppm) {
-    int fg, bg;
-   
-    fg = TFT_WHITE;
-    bg = TFT_RED;
-       
-    display_big(String(ppm), fg, bg);
-}
-
-
-
-void ppm_demo() {
-    display_big("demo!");
-    delay(3000);
-    display_logo();
-    delay(1000);
-    int buttoncounter = 0;
-    for (int p = 400; p < 1200; p++) {
-        display_ppm(p);
-        if (button(pin_demobutton)) {
-            display_logo();
-            delay(500);
-            return;
-        }
-    }
-    display_logo();
-    Serial.print("MQTTGo v2 restarting ESP in 5 sec cause PPM demo routine");
-    delay(5000);
-    ESP.restart();
-}
-
-
 void panic(const String& message) {
     display_big(message, TFT_RED);
     delay(5000);
@@ -103,20 +71,6 @@ bool button(int pin) {
 void check_portalbutton() {
     if (button(pin_portalbutton)) WiFiSettings.portal();
 }
-
-
-void check_PubButton() {
-    if (button(pin_demobutton)) {
-        ppm_demo();
-    }
-}
-
-
-void check_buttons() {
-    check_portalbutton();
-    check_PubButton();
-}
-
 
 
 // ***************** OTA handlers ******************************** OTA handlers ******************************** OTA handlers ***************
@@ -193,7 +147,7 @@ void setup() {
     // pinMode(pin_pcb_ok,         INPUT_PULLUP);
     pinMode(pin_backlight,      OUTPUT);
 
-    WiFiSettings.hostname = "HiveMq-";
+    WiFiSettings.hostname = "HiveMQ-";
     WiFiSettings.language = LANGUAGE;
     WiFiSettings.begin();
     MQTTLanguage::select(T, WiFiSettings.language);
@@ -218,7 +172,7 @@ void setup() {
     max_failures  = WiFiSettings.integer("HiveMQ_max_failures", 0, 1000, 10, T.config_max_failures);
     mqtt_Pubtopic = WiFiSettings.string("HiveMQ_mqtt_topic", WiFiSettings.hostname, T.config_mqtt_topic);
     mqtt_Subtopic  = WiFiSettings.string("HiveMQ_Submqtt_topic", "HiveMQ-e8e288-ks", T.config_Submqtt_topic); 
-    mqtt_interval = 1000UL * WiFiSettings.integer("HiveMQ_mqtt_interval", 10, 3600, 10, T.config_mqtt_interval);
+    mqtt_interval = 1000UL * WiFiSettings.integer("HiveMQ_mqtt_interval", 10, 3600, 30, T.config_mqtt_interval);
     mqtt_template = WiFiSettings.string("HiveMQ_mqtt_template", "Value : {}", T.config_mqtt_template);
     WiFiSettings.info(T.config_template_info);
 
@@ -275,6 +229,11 @@ void setup() {
     if (mqtt_enabled) mqtt.begin(server.c_str(), port, wificlient);
     
     Serial.println("Ready .... ");
+    
+    mqtt.loop();
+    connect_mqtt();
+    retain(mqtt_Pubtopic, "Initial message"); 
+    
     display_big("Ready !", TFT_RED);
     delay(1000);
     display_config(server,mqtt_Pubtopic,mqtt_Subtopic);
@@ -289,14 +248,11 @@ void setup() {
 
 void loop() {
     
-// TODO: replace by interval
-    every(20000) {
-        
+    every(mqtt_interval) {
         mqtt.loop();
         connect_mqtt();
         retain(mqtt_Pubtopic, "Still alive");
         Serial.println("MQTTGo v2 MQTT Still alive messages send");
-        
     }
 
 
@@ -310,8 +266,8 @@ void loop() {
         delay(2000);
     }
 
-    // if (ota_enabled) ArduinoOTA.handle();
-    check_portalbutton();
-    // check_PubButton();
-}
-
+    if (button(pin_portalbutton)) { // check if upper btn is pressed and invoke Wifi settings portal
+        WiFiSettings.portal();
+    }
+  
+}   //loop

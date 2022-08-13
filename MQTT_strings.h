@@ -72,9 +72,9 @@ bool select(Texts& T, String language) {
         T.config_max_failures = "Number of failed connections before automatic restart";
         T.config_mqtt_topic = "Publish Topic";  // probably should not be translated
         T.config_Submqtt_topic = "Subscribe Topic";  // probably should not be translated
-        T.config_mqtt_interval = "Publication interval [s]";
+        T.config_mqtt_interval = "Keep alive publish interval [s]";
         T.config_mqtt_template = "Message template";
-        T.config_template_info = "The {} in the template is replaced by the measurement value.";
+        T.config_template_info = "The {} in the template is replaced.";
         T.connecting = "Connecting to WiFi...";
         T.portal_instructions = {
             {
@@ -142,9 +142,9 @@ bool select(Texts& T, String language) {
         T.config_max_failures = "Aantal verbindingsfouten voor automatische herstart";
         T.config_mqtt_topic = "Publish Topic";  // probably should not be translated
         T.config_Submqtt_topic = "Subscribe Topic";  // probably should not be translated
-        T.config_mqtt_interval = "Publicatie-interval [s]";
+        T.config_mqtt_interval = "Keep alive Publicatie-interval [s]";
         T.config_mqtt_template = "Berichtsjabloon";
-        T.config_template_info = "De {} in het sjabloon wordt vervangen door de gemeten waarde.";
+        T.config_template_info = "De {} in het sjabloon wordt vervangen ";
         T.connecting = "Verbinden met WiFi...";
         T.portal_instructions = {
             {
