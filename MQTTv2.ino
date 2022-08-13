@@ -288,42 +288,26 @@ void setup() {
 #define every(t) for (static unsigned long _lasttime; (unsigned long)((unsigned long)millis() - _lasttime) >= (t); _lasttime = millis())
 
 void loop() {
-    static int co2;
-
+    
+// TODO: replace by interval
     every(20000) {
         
         mqtt.loop();
         connect_mqtt();
-        retain(mqtt_Pubtopic, "Still alived");
+        retain(mqtt_Pubtopic, "Still alive");
         Serial.println("MQTTGo v2 MQTT Still alive messages send");
         
     }
 
-/* update Oled with CO2 value :
-
-    every(50) {
-        if (co2 < 0) {
-            display_big(T.error_sensor, TFT_RED);
-        } else if (co2 == 0) {
-            display_big(T.wait);
-        } else {
-            // Serial.println("MQTTGo v2 Update display now...");
-            // some MH-Z19's go to 10000 but the display has space for 4 digits
-            display_ppm(co2 > 9999 ? 9999 : co2);
-        }
-    }
-*/
 
     if (mqtt_enabled && button(pin_demobutton)) {
         Serial.println("MQTTGo v2 MQTT enabled and Button press detected, pubbing msg now..");
         mqtt.loop();
         connect_mqtt();
-        display_big("button pressed");
+        display_big("Button pressed"); // Show keypress on Oled
         delay(1000);
-        retain(mqtt_Pubtopic, "Button press detected");
+        retain(mqtt_Pubtopic, "Button press detected");  // Pub the MQTT message with retain flag 
         delay(2000);
-        
-        
     }
 
     // if (ota_enabled) ArduinoOTA.handle();

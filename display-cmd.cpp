@@ -59,8 +59,16 @@ void display_topic(const String& mqtt_topic, const String& payload)
 {
     display.fillScreen(TFT_BLACK);
     display.setCursor(0, 0, 2);
-    display.setTextColor(TFT_GREEN,TFT_BLACK);    display.setTextFont(2);
-    display.println("Publishing on Topic:"); 
+    
+    display.setTextColor(TFT_CYAN,TFT_BLACK);    
+    display.setTextFont(4);
+    display.println("Last Pub'ed:"); 
+    
+
+
+    display.setTextColor(TFT_GREEN,TFT_BLACK);    
+    display.setTextFont(2);
+    display.println("on Topic:"); 
     
     display.setTextColor(TFT_RED,TFT_BLACK);    display.setTextFont(4);
     display.println(mqtt_topic); 
