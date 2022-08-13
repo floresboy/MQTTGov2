@@ -143,7 +143,6 @@ void setup() {
 
     pinMode(pin_portalbutton,   INPUT_PULLUP);
     pinMode(pin_demobutton,     INPUT_PULLUP);
-    // pinMode(pin_pcb_ok,         INPUT_PULLUP);
     pinMode(pin_backlight,      OUTPUT);
 
     WiFiSettings.hostname = "HiveMQ-";
@@ -161,18 +160,18 @@ void setup() {
         str.replace("{ssid}", WiFiSettings.hostname);
     }
 
-    wifi_enabled  = WiFiSettings.checkbox("operame_wifi", false, T.config_wifi);
+    wifi_enabled  = WiFiSettings.checkbox("operame_wifi", true, T.config_wifi);
     // ota_enabled   = WiFiSettings.checkbox("operame_ota", false, T.config_ota) && wifi_enabled;
 
     WiFiSettings.heading("MQTT");
-    mqtt_enabled  = WiFiSettings.checkbox("HiveMQ_mqtt", false, T.config_mqtt) && wifi_enabled;
+    mqtt_enabled  = WiFiSettings.checkbox("HiveMQ_mqtt", true, T.config_mqtt) && wifi_enabled;
     String server = WiFiSettings.string("mqtt_server", 64, "broker.hivemq.com", T.config_mqtt_server);
     int port      = WiFiSettings.integer("mqtt_port", 0, 65535, 1883, T.config_mqtt_port);
     max_failures  = WiFiSettings.integer("HiveMQ_max_failures", 0, 1000, 10, T.config_max_failures);
-    mqtt_Pubtopic = WiFiSettings.string("HiveMQ_mqtt_topic", WiFiSettings.hostname, T.config_mqtt_topic);
-    mqtt_Subtopic  = WiFiSettings.string("HiveMQ_Submqtt_topic", "HiveMQ-e8e288-ks", T.config_Submqtt_topic); 
+    mqtt_Pubtopic = WiFiSettings.string("HiveMQ_mqtt_topic", "HiveMQ/"+WiFiSettings.hostname, T.config_mqtt_topic);
+    mqtt_Subtopic  = WiFiSettings.string("HiveMQ_Submqtt_topic", "HiveMQ/SubTopic", T.config_Submqtt_topic); 
     mqtt_interval = 1000UL * WiFiSettings.integer("HiveMQ_mqtt_interval", 10, 3600, 30, T.config_mqtt_interval);
-    mqtt_template = WiFiSettings.string("HiveMQ_mqtt_template", "Value : {}", T.config_mqtt_template);
+    mqtt_template = WiFiSettings.string("HiveMQ_mqtt_template", "Payload : {}", T.config_mqtt_template);
     WiFiSettings.info(T.config_template_info);
 
 
@@ -181,6 +180,8 @@ void setup() {
     Serial.println(mqtt_Pubtopic);
     Serial.print("mqtt_Subtopic: ");
     Serial.println(mqtt_Subtopic);
+    Serial.print("mqtt_template/payload: ");
+    Serial.println(mqtt_template);
     Serial.print("PlatformIO Unix compile time: ");
     Serial.println(COMPILE_UNIX_TIME);
     Serial.println("*** ****** *******  ***");
@@ -257,17 +258,20 @@ void loop() {
 
 
     every(mqtt_interval) {
-        MQTTretain(mqtt_Pubtopic, "Still alive");
-        Serial.println("MQTTGo v2 MQTT Still alive messages send");
+
+        MQTTretain(mqtt_Pubtopic, WiFiSettings.hostname+ " is still alive ");
+        Serial.printf("MQTTGo v2 MQTT %s Still alive messages send\n",WiFiSettings.hostname );
     }
 
-
     if (mqtt_enabled && button(pin_demobutton)) {
-        Serial.println("MQTTGo v2 MQTT enabled and Button press detected, pubbing msg now..");
+        mqtt_template.replace("{}", WiFiSettings.hostname);
+        Serial.printf("MQTTGo v2 MQTT enabled and Button press detected, pubbing : %s now..\n",mqtt_template);
         display_big("Btn press"); // Show keypress on Oled
         delay(1000);
-        MQTTretain(mqtt_Pubtopic, "!!Button press!!");  // Pub the MQTT message with retain flag 
+        MQTTretain(mqtt_Pubtopic, mqtt_template);  // Pub the MQTT message with retain flag 
         delay(2000);
+
+        //   str.replace("{ssid}", WiFiSettings.hostname);
     }
 
     if (button(pin_portalbutton)) { // check if upper btn is pressed and invoke Wifi settings portal

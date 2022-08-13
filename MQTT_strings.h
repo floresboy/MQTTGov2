@@ -68,8 +68,8 @@ bool select(Texts& T, String language) {
         T.config_mqtt_topic = "Publish Topic";  // probably should not be translated
         T.config_Submqtt_topic = "Subscribe Topic";  // probably should not be translated
         T.config_mqtt_interval = "Keep alive publish interval [s]";
-        T.config_mqtt_template = "Message template";
-        T.config_template_info = "The {} in the template is replaced.";
+        T.config_mqtt_template = "Payload template";
+        T.config_template_info = "The {} in the template is replaced by the hostname.";
         T.connecting = "Connecting to WiFi...";
         T.portal_instructions = {
             {
@@ -137,8 +137,8 @@ bool select(Texts& T, String language) {
         T.config_mqtt_topic = "Publish Topic";  // probably should not be translated
         T.config_Submqtt_topic = "Subscribe Topic";  // probably should not be translated
         T.config_mqtt_interval = "Keep alive Publicatie-interval [s]";
-        T.config_mqtt_template = "Berichtsjabloon";
-        T.config_template_info = "De {} in het sjabloon wordt vervangen ";
+        T.config_mqtt_template = "Payload sjabloon";
+        T.config_template_info = "De {} in het sjabloon wordt vervangen door de hostname ";
         T.connecting = "Verbinden met WiFi...";
         T.portal_instructions = {
             {
