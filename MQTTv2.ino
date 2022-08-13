@@ -36,13 +36,6 @@ bool            wifi_enabled;
 bool            mqtt_enabled;
 int             max_failures;
 
-void retain(const String& topic, const String& message) {
-    Serial.printf("MQTTGo v2 Pub-ing ret. message now... topic: %s payload: %s\n", topic.c_str(), message.c_str());
-    display_topic(topic, message);
-    mqtt.publish(topic, message, true, 0);
-}
-
-
 
 void panic(const String& message) {
     display_big(message, TFT_RED);
@@ -85,17 +78,58 @@ void setup_ota() {
     ArduinoOTA.begin();
 }
 
+// ***************** MQTT handlers ******************************** MQTT handlers ******************************** MQTT handlers ***************
+
+
+void MQTTretain(const String& topic, const String& message) {
+    Serial.printf("MQTTGo v2 Pub-ing ret. message now... topic: %s payload: %s\n", topic.c_str(), message.c_str());
+    display_topic(topic, message);
+    mqtt.publish(topic, message, true, 0);
+}
+
+void MQTTpub(const String& topic, const String& message) {
+// Handler for to be published messages
+    Serial.printf("publishing on topic: %s payload: %s\n", topic.c_str(), message.c_str());
+    display_topic(topic, message);
+    mqtt.publish(topic, message, false, 0);  //bool .publish(const char topic[], const char payload[], bool retained, int qos);
+}
+
 void connect_mqtt() {
-    if (mqtt.connected()) return;  // already/still connected
+    if (mqtt.connected()) return;  // already/still connected - https://github.com/256dpi/arduino-mqtt
 
     static int failures = 0;
     if (mqtt.connect(WiFiSettings.hostname.c_str())) {
         failures = 0;
+        mqtt.subscribe(mqtt_Subtopic);
+
     } else {
         failures++;
         if (failures >= max_failures) panic(T.error_mqtt);
     }
 }
+
+void MQTT_messageReceived(String &topic, String &payload) {
+// Handler for incomming (subscribed messages)
+  Serial.println("incoming on topic: " + topic + " payload: " + payload);
+  display_Incoming_topic(topic, payload);
+  
+  /*
+  for (auto& str : T.DispSubMsg) {
+        str.replace("{topic}", topic);
+        str.replace("{payload}", payload);
+    }
+  display_lines(T.DispSubMsg, TFT_WHITE, TFT_BLUE);
+  */
+}
+
+
+
+
+
+
+
+
+// ***********************************************************************************************
 
 void flush(Stream& s, int limit = 20) {
     // .available() sometimes stays true (why?), hence the limit
@@ -221,13 +255,16 @@ void setup() {
 
     mqtt_enabled = true;
     static WiFiClient wificlient;
-    if (mqtt_enabled) mqtt.begin(server.c_str(), port, wificlient);
+    if (mqtt_enabled) {
+        mqtt.begin(server.c_str(), port, wificlient);
+        mqtt.onMessage(MQTT_messageReceived);
+    }
     
     Serial.println("Ready .... ");
     
     mqtt.loop();
     connect_mqtt();
-    retain(mqtt_Pubtopic, "Initial message"); 
+    MQTTretain(mqtt_Pubtopic, "Initial message"); 
     
     display_big("Ready !", TFT_RED);
     delay(1000);
@@ -243,21 +280,23 @@ void setup() {
 
 void loop() {
     
-    every(mqtt_interval) {
-        mqtt.loop();
+    mqtt.loop();
+    if (!mqtt.connected()) {
         connect_mqtt();
-        retain(mqtt_Pubtopic, "Still alive");
+    }
+
+
+    every(mqtt_interval) {
+        MQTTretain(mqtt_Pubtopic, "Still alive");
         Serial.println("MQTTGo v2 MQTT Still alive messages send");
     }
 
 
     if (mqtt_enabled && button(pin_demobutton)) {
         Serial.println("MQTTGo v2 MQTT enabled and Button press detected, pubbing msg now..");
-        mqtt.loop();
-        connect_mqtt();
         display_big("Button pressed"); // Show keypress on Oled
         delay(1000);
-        retain(mqtt_Pubtopic, "Button press detected");  // Pub the MQTT message with retain flag 
+        MQTTretain(mqtt_Pubtopic, "Button press detected");  // Pub the MQTT message with retain flag 
         delay(2000);
     }
 

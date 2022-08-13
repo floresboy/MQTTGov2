@@ -84,14 +84,18 @@ void display_Incoming_topic(const String& mqtt_in_topic, const String& payload)
 {
     display.fillScreen(TFT_BLACK);
     display.setCursor(0, 0, 2);
-    
-    display.setTextColor(TFT_WHITE,TFT_BLACK);    display.setTextFont(2);
-    display.println("Incoming Topic:"); 
+
+    display.setTextColor(TFT_CYAN,TFT_BLACK);    
+    display.setTextFont(4);
+    display.println("Last incomming :"); 
+        
+    display.setTextColor(TFT_DARKGREEN,TFT_BLACK);    display.setTextFont(2);
+    display.println("on Topic:"); 
     display.setTextColor(TFT_RED,TFT_BLACK);    display.setTextFont(4);
     display.println(mqtt_in_topic); 
     
     display.setTextColor(TFT_WHITE,TFT_BLACK);    display.setTextFont(2);
-    display.println("Payload:"); 
+    display.println("withPayload:"); 
     display.setTextColor(TFT_RED,TFT_BLACK);    display.setTextFont(4);
     display.println(payload); 
 }
