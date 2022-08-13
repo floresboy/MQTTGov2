@@ -10,12 +10,12 @@
 #include <TFT_eSPI.h>
 
 #include <list>
-#include <operame_strings.h>
+#include <MQTT_strings.h>
 
 #include <display-cmd.h>
 
 #define LANGUAGE "nl"
-OperameLanguage::Texts T;
+MQTTLanguage::Texts T;
 
 enum Driver { AQC, MHZ };
 Driver          driver;
@@ -47,7 +47,7 @@ int             max_failures;
 
 void retain(const String& topic, const String& message) {
     Serial.println("MQTTGo v2 Pub-ing ret. message now...");
-    Serial.printf("%s %s\n", topic.c_str(), message.c_str());
+    Serial.printf("topic: %s payload: %s\n", topic.c_str(), message.c_str());
     mqtt.publish(topic, message, true, 0);
 }
 
@@ -175,7 +175,7 @@ void setup() {
 
     display_init();
 
-    OperameLanguage::select(T, LANGUAGE);
+    MQTTLanguage::select(T, LANGUAGE);
 
     if (!SPIFFS.begin(false)) {
         display_lines(T.first_run, TFT_MAGENTA);
@@ -193,7 +193,7 @@ void setup() {
     WiFiSettings.hostname = "HiveMq-";
     WiFiSettings.language = LANGUAGE;
     WiFiSettings.begin();
-    OperameLanguage::select(T, WiFiSettings.language);
+    MQTTLanguage::select(T, WiFiSettings.language);
 
     Serial.println("MQTTGo v2 Display logo");
     display_logo();
@@ -206,7 +206,7 @@ void setup() {
     }
 
     wifi_enabled  = WiFiSettings.checkbox("operame_wifi", false, T.config_wifi);
-    ota_enabled   = WiFiSettings.checkbox("operame_ota", false, T.config_ota) && wifi_enabled;
+    // ota_enabled   = WiFiSettings.checkbox("operame_ota", false, T.config_ota) && wifi_enabled;
 
     WiFiSettings.heading("CO2-niveaus");
     co2_warning   = WiFiSettings.integer("operame_co2_warning", 400, 5000, 700, T.config_co2_warning);
@@ -305,6 +305,6 @@ void loop() {
         }
     }
 
-    if (ota_enabled) ArduinoOTA.handle();
+    // if (ota_enabled) ArduinoOTA.handle();
     check_buttons();
 }

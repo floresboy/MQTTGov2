@@ -2,11 +2,12 @@
 #include <vector>
 #include <list>
 
-namespace OperameLanguage {
+namespace MQTTLanguage {
 
 struct Texts {
     const char
         *error_mqtt,
+        *online,
         *error_driver,
         *error_module,
         *error_timeout,
@@ -14,7 +15,7 @@ struct Texts {
         *error_wifi,
         *error_format,
         *config_wifi,
-        *config_ota,
+        // *config_ota,
         *config_co2_warning,
         *config_co2_critical,
         *config_co2_blink,
@@ -23,6 +24,7 @@ struct Texts {
         *config_mqtt_port,
         *config_max_failures,
         *config_mqtt_topic,
+        *config_Submqtt_topic,
         *config_mqtt_interval,
         *config_mqtt_template,
         *config_template_info,
@@ -30,6 +32,7 @@ struct Texts {
         *wait
     ;
     std::vector<std::list<String>> portal_instructions;
+    std::list<String> DispSubMsg;
     std::list<String> first_run;
     std::list<String> calibration;
     std::list<String> calibrating;
@@ -53,6 +56,7 @@ bool select(Texts& T, String language) {
 
     if (language == "en") {
         T.error_mqtt = "MQTT unreachable";
+        T.online = "still online";
         T.error_driver = "driver error";
         T.error_module = "module turned around!";
         T.error_timeout = "Time's up";
@@ -61,15 +65,13 @@ bool select(Texts& T, String language) {
         T.error_format = "Formatting failed";
         T.wait = "wait...";
         T.config_wifi = "Use WiFi connection";
-        T.config_ota = "Enable wireless reprogramming. (Uses portal password!)";
-        T.config_co2_warning = "Yellow from [ppm]";
-        T.config_co2_critical = "Red from [ppm]";
-        T.config_co2_blink = "Blink from [ppm]";
-        T.config_mqtt = "Publish measurements via the MQTT protocol";
+        // T.config_ota = "Enable wireless reprogramming. (Uses portal password!)";
+        T.config_mqtt = "Publish  via the MQTT protocol";
         T.config_mqtt_server = "Broker";  // probably should not be translated
         T.config_mqtt_port = "Broker TCP port";
         T.config_max_failures = "Number of failed connections before automatic restart";
-        T.config_mqtt_topic = "Topic";  // probably should not be translated
+        T.config_mqtt_topic = "Publish Topic";  // probably should not be translated
+        T.config_Submqtt_topic = "Subscribe Topic";  // probably should not be translated
         T.config_mqtt_interval = "Publication interval [s]";
         T.config_mqtt_template = "Message template";
         T.config_template_info = "The {} in the template is replaced by the measurement value.";
@@ -98,6 +100,11 @@ bool select(Texts& T, String language) {
                 "when you're done."
             }
         };
+        T.DispSubMsg = {
+            "Incoming",
+            "\"{topic}\"",
+            "\"{payload}\"",
+        };
         T.first_run = {
             "DO NOT TURN OFF",
             "Initializing",
@@ -119,6 +126,7 @@ bool select(Texts& T, String language) {
 
     if(language == "nl") {
         T.error_mqtt = "MQTT onbereikbaar";
+        T.online = "nog online";
         T.error_driver = "driverfout";
         T.error_module = "module verkeerd om!";
         T.error_timeout = "Tijd verstreken";
@@ -127,15 +135,13 @@ bool select(Texts& T, String language) {
         T.error_format = "Formatteren mislukt";
         T.wait = "wacht...";
         T.config_wifi = "WiFi-verbinding gebruiken";
-        T.config_ota = "Draadloos herprogrammeren inschakelen. (Gebruikt portaalwachtwoord!)";
-        T.config_co2_warning = "Geel vanaf [ppm]";
-        T.config_co2_critical = "Rood vanaf [ppm]";
-        T.config_co2_blink = "Knipperen vanaf [ppm]";
-        T.config_mqtt = "Metingen via het MQTT-protocol versturen";
-        T.config_mqtt_server = "Broker";  // zo heet dat in MQTT
+        // T.config_ota = "Draadloos herprogrammeren inschakelen. (Gebruikt portaalwachtwoord!)";
+        T.config_mqtt = "Data via het MQTT-protocol versturen";
+        T.config_mqtt_server = "Broker";  
         T.config_mqtt_port = "Broker TCP-poort";
         T.config_max_failures = "Aantal verbindingsfouten voor automatische herstart";
-        T.config_mqtt_topic = "Topic";  // zo heet dat in MQTT
+        T.config_mqtt_topic = "Publish Topic";  // probably should not be translated
+        T.config_Submqtt_topic = "Subscribe Topic";  // probably should not be translated
         T.config_mqtt_interval = "Publicatie-interval [s]";
         T.config_mqtt_template = "Berichtsjabloon";
         T.config_template_info = "De {} in het sjabloon wordt vervangen door de gemeten waarde.";
@@ -163,6 +169,11 @@ bool select(Texts& T, String language) {
                 "Of \"Herstarten\"",
                 "als u klaar bent."
             }
+        };
+        T.DispSubMsg = {
+            "Incoming",
+            "\"{topic}\"",
+            "\"{payload}\"",
         };
         T.first_run = {
             "NIET",
