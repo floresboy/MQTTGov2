@@ -19,8 +19,6 @@ MQTTLanguage::Texts T;
 
 MQTTClient      mqtt;
 
-// MHZ19           mhz;
-
 const int       pin_portalbutton = 35;
 const int       pin_demobutton   = 0;
 const int       pin_backlight    = 4;
@@ -61,8 +59,6 @@ void check_portalbutton() {
 
 // ***************** OTA handlers ******************************** OTA handlers ******************************** OTA handlers ***************
 
-
-
 void setup_ota() {
     ArduinoOTA.setHostname(WiFiSettings.hostname.c_str());
     ArduinoOTA.setPassword(WiFiSettings.password.c_str());
@@ -77,7 +73,6 @@ void setup_ota() {
 }
 
 // ***************** MQTT handlers ******************************** MQTT handlers ******************************** MQTT handlers ***************
-
 
 void MQTTretain(const String& topic, const String& message) {
     Serial.printf("MQTTGo v2 Pub-ing ret. message now... topic: %s payload: %s\n", topic.c_str(), message.c_str());
@@ -154,8 +149,6 @@ void setup() {
     display_logo();
     delay(2000);
 
-
-
     for (auto& str : T.portal_instructions[0]) {
         str.replace("{ssid}", WiFiSettings.hostname);
     }
@@ -198,7 +191,6 @@ void setup() {
     static int portal_phase = 0;
     static unsigned long portal_start;
     WiFiSettings.onPortal = [] {
-        // if (ota_enabled) setup_ota();
         portal_start = millis();
     };
     WiFiSettings.onPortalView = [] {
@@ -234,7 +226,7 @@ void setup() {
     
     mqtt.loop();
     connect_mqtt();
-    MQTTretain(mqtt_Pubtopic, "Initial message"); 
+    MQTTretain(mqtt_Pubtopic, "Initial message from "+WiFiSettings.hostname); 
     
     display_big("Ready !", TFT_RED);
     delay(1000);
