@@ -1,6 +1,6 @@
 # MQTTGo v2
 
-This repo contains the source code for setting up a demo consisting of tho TTgo devices communiucating over MQTT. For demo purposes the public HiveMQ broker/logo is used but this code is not in anyway releated, endorsed or supported by HiveMQ.
+This repo contains the source code for setting up a demo consisting of two TTgo devices communiucating over a MQTT broker. For demo purposes the public HiveMQ broker/logo is used but this code is not in anyway endorsed nor supported by HiveMQ.
 
 Best, K
 
@@ -19,6 +19,7 @@ This repo uses [PlatformIO](https://platformio.org/) to build, compiule and uplo
 1. Install Platform IO (within VScode)
 2. Clone repo to local drive
 3. 'cd' to this repo and run `pio run` .
+4. Setup Wifi, Broker, Pub and Sub topics amd the payload by connecting a mobile phone to the Wifi SSID that is displayed on the TTG at startup.
 
 ### Installeren.
 
@@ -27,3 +28,6 @@ Deze repository gebruikt [PlatformIO](https://platformio.org/) voor installatie.
 1. Installeer PlatformIO.
 2. Kloon deze repository lokaal.
 3. Ga naar de map van deze repository en voer `pio run` uit.
+4. Setup Wifi, Broker, Pub and Sub topics en de payload door een mobile telefoon te verbinden met de Wifi SSID die op het display van de TTgo staat.
+
+
