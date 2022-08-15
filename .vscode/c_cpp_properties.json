@@ -491,7 +491,7 @@
                 "LOAD_FONT8=1",
                 "LOAD_GFXFF=1",
                 "SPI_FREQUENCY=40000000",
-                "COMPILE_UNIX_TIME=1660546991",
+                "COMPILE_UNIX_TIME=1660547290",
                 "HAVE_CONFIG_H",
                 "MBEDTLS_CONFIG_FILE=\"mbedtls/esp_config.h\"",
                 "UNITY_INCLUDE_CONFIG_H",
