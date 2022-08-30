@@ -2,7 +2,7 @@
 
 This repo contains the source code for setting up a demo consisting of two TTgo devices communiucating over a MQTT broker. For demo purposes the public HiveMQ broker/logo is used but this code is not in anyway endorsed nor supported by HiveMQ.
 
-Best, K
+Best, Kamiel.straatman@hiveMQ.com
 
 ## Language
 
